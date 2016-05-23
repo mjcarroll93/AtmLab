@@ -1,6 +1,7 @@
 package io.michaelcarroll;
 
 import java.text.NumberFormat;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Display {
@@ -12,8 +13,7 @@ public class Display {
 
     public void runAtm() {
         carrollBankLogo();
-        returningUserOrNewUserMessage();
-        newAccountOrReturningUserHandler(getCommandFromUser());
+        newAccountOrReturningUserHandler(getIntPrompt("Welcome to Carroll Bank!\n Are you a..\n 1.) New User\n2.) Returning User\n"));
         while (powerOn) {
             startAtmAndPromptUser();
         }
@@ -22,55 +22,38 @@ public class Display {
     public void newAccountOrReturningUserHandler(int command) {
         switch (command) {
             case 1:
-                promptUserToEnterName();
-                String name = input.nextLine();
+                String name = getStringPrompt("Please enter your name");
                 currentIdOnDisplay = UserAccountsHandler.usersAccountsWithBank.size() + 1;
-                promptUserToEnterPinCode();
-                int pin = input.nextInt();
+                int pin = getIntPrompt("Please enter a 4-digit Pin Code for later use");
                 UserAccountsHandler.addAccountToBank(currentIdOnDisplay, new User(name, pin));
                 System.out.println("Hello " + name + ". Your Id is " + currentIdOnDisplay + " and your pin code is " + pin);
-                checkingSavingsOrInvestmentPrompt();
-                newCheckingSavingsOrInvestmentAccountSpecifier(getCommandFromUser(), currentIdOnDisplay);
+                newCheckingSavingsOrInvestmentAccountSpecifier(accountTypeToOpen(), currentIdOnDisplay);
                 break;
             case 2:
-                welcomeBackMessage();
-                currentIdOnDisplay = getCommandFromUser();
-                System.out.println(UserAccountsHandler.usersAccountsWithBank.get(currentIdOnDisplay).getBankAccountHolderName());
-                whatIsYourPinCode();
-                int pinCodeEntered = getCommandFromUser();
+                currentIdOnDisplay = getIntPrompt("Welcome back! Enter your account ID to access your account");
+                printMessage(UserAccountsHandler.usersAccountsWithBank.get(currentIdOnDisplay).getBankAccountHolderName());
+                int pinCodeEntered = getIntPrompt("Enter your Pin Code");
                 int actualPinCode = UserAccountsHandler.usersAccountsWithBank.get(currentIdOnDisplay).getBankAccountPinCode();
                 boolean accessGranted = checkPinCode(pinCodeEntered, actualPinCode);
                 if (accessGranted) {
-                    whichAccountTypeWouldYouLikeToAccessMessage();
-                    int accessCommand = getCommandFromUser();
-                    whatIsYourBankAccountNumber();
-                    String accountNumber = getStringFromUser();
+                    int accessCommand = getIntPrompt("Would account would you like to access.. 1.)Checking 2.)Savings or 3.)Investment Account? Enter the " +
+                            "corresponding number value ");
+                    String accountNumber = getStringPrompt("Please enter your bank account number: ");
                     accessAccount(currentIdOnDisplay, accessCommand, accountNumber);
                 } else {
-                    sorryYouEnteredTheWrongPin();
+                    printMessage("Sorry you entered the wrong Pin");
                     runAtm();
                 }
                 break;
             default:
-                System.out.println("Please enter either a 1 for new user or " +
+                printMessage("Please enter either a 1 for new user or " +
                         "2 for returning user");
-                returningUserOrNewUserMessage();
-                newAccountOrReturningUserHandler(getCommandFromUser());
+                newAccountOrReturningUserHandler(getIntPrompt("Welcome to Carroll Bank\n Are you a 1.) New User\n2.) Returning User"));
         }
     }
 
-    public int getCommandFromUser() {
-        return input.nextInt();
-    }
-
-    public double getAmountFromUser() {
-        return input.nextDouble();
-    }
-
     public void startAtmAndPromptUser() {
-        menuPrompt();
-        int commandEntered = getCommandFromUser();
-        commandHandler(commandEntered);
+        commandHandler(getIntPrompt(menuPrompt()));
     }
 
     public void commandHandler(int commandEntered) {
@@ -79,23 +62,19 @@ public class Display {
                 displayBalance(currentAccountOnDisplay);
                 break;
             case 2:
-                withdrawMessage();
-                currentAccountOnDisplay.makeWithdrawFromAccount(getAmountFromUser());
+                currentAccountOnDisplay.makeWithdrawFromAccount(getDoublePrompt("Please enter an amount to withdraw: "));
                 break;
             case 3:
-                depositMessage();
-                currentAccountOnDisplay.makeDepositIntoAccount(getAmountFromUser());
+                currentAccountOnDisplay.makeDepositIntoAccount(getDoublePrompt("Please enter the amount you'd like to deposit: "));
                 break;
             case 5:
                 currentAccountOnDisplay.printAccountTransactionHistory();
                 break;
             case 6:
-                checkingSavingsOrInvestmentPrompt();
-                newCheckingSavingsOrInvestmentAccountSpecifier(getCommandFromUser(), currentIdOnDisplay);
+                newCheckingSavingsOrInvestmentAccountSpecifier(accountTypeToOpen(), currentIdOnDisplay);
                 break;
             case 7:
-                areYouSureYouWantToCloseThisAccount();
-                int answer = getCommandFromUser();
+                int answer = getIntPrompt("Are you sure you want to close this account?\n1.) YES 2.)NO");
                 if (answer == 1) {
                     currentAccountOnDisplay.makeWithdrawFromAccount(currentAccountOnDisplay.getBankAccountBalance());
                     currentAccountOnDisplay.closeAccount();
@@ -103,14 +82,10 @@ public class Display {
                 break;
             case 4:
             case 8:
-                askForTransferAccountType();
-                int accountType = getCommandFromUser();
-                askForTransferUserId();
-                int userId = getCommandFromUser();
-                askForAccountNumber();
-                String userAccountNumber = getStringFromUser();
-                askForAmountToTransfer();
-                double amount = getAmountFromUser();
+                int accountType = getIntPrompt("Which account type would you like to send money to 1.) Checking\n2.)Savings\n3.)Investment");
+                int userId = getIntPrompt("What is the user's Id you'd like to transfer to?");
+                String userAccountNumber = getStringPrompt("Enter account number to transfer to: ");
+                double amount = getDoublePrompt("Please enter the amount you'd like to Transfer: ");
                 currentAccountOnDisplay.transferTo(accountType, userId, userAccountNumber, amount);
                 break;
             case 9:
@@ -126,16 +101,15 @@ public class Display {
                 powerOn = false;
                 break;
             default:
-                System.out.println("Please enter a valid command available on the screen: ");
+                printMessage("Please enter a valid command available on the screen: ");
                 startAtmAndPromptUser();
                 break;
         }
     }
 
-    public void newCheckingSavingsOrInvestmentAccountSpecifier(int answer, int id) {
-        enterBankAccountNumberMessage();
-        String accountNumber = getStringFromUser();
-        switch (answer) {
+    public void newCheckingSavingsOrInvestmentAccountSpecifier(int accountType, int id) {
+        String accountNumber = getStringPrompt("Please enter desired bank Account Number: ");
+        switch (accountType) {
             case 1:
                 UserAccountsHandler.usersAccountsWithBank.get(id).addCheckingAccount(accountNumber);
                 accessAccount(id, 1, accountNumber);
@@ -150,7 +124,7 @@ public class Display {
                 break;
             default:
                 System.out.println("Please enter either a '1' for Checking, '2' for Saving or '3' for Investment ");
-                newCheckingSavingsOrInvestmentAccountSpecifier(answer, id);
+                newCheckingSavingsOrInvestmentAccountSpecifier(accountType, id);
         }
     }
 
@@ -169,7 +143,7 @@ public class Display {
     }
 
     public void displayBalance(BankAccount currentAccountOnDisplay) {
-        System.out.println("\nCurrent Balance in " + currentAccountOnDisplay.getClass().getName().replace("io.michaelcarroll.", "") + ": " + formatter.format(currentAccountOnDisplay.getBankAccountBalance()) + "\n");
+        printMessage("\nCurrent Balance in " + currentAccountOnDisplay.getClass().getName().replace("io.michaelcarroll.", "") + ": " + formatter.format(currentAccountOnDisplay.getBankAccountBalance()) + "\n");
     }
 
     public boolean checkPinCode(int pinEntered, int actualPin) {
@@ -179,18 +153,8 @@ public class Display {
             return true;
     }
 
-    public void sorryYouEnteredTheWrongPin() {
-        System.out.println("Sorry you entered the wrong Pin");
-    }
-
-    public void returningUserOrNewUserMessage() {
-        System.out.println("Welcome to Carroll Bank\n" +
-                "Are you a 1.) New User " +
-                "2.) Returning User");
-    }
-
-    public void menuPrompt() {
-        System.out.print("WELCOME TO CARROLL BANK - PLEASE ENTER A CORRESPONDING COMMAND\n" +
+    public String menuPrompt() {
+        return "WELCOME TO CARROLL BANK - PLEASE ENTER A CORRESPONDING COMMAND\n" +
                 "1.)Display Balance\n" +
                 "2.) Withdraw\n" +
                 "3.)Deposit\n" +
@@ -202,74 +166,13 @@ public class Display {
                 "9.)Freeze Account\n" +
                 "10.)Unfreeze account\n" +
                 "11.)Log Out\n" +
-                "12.)Exit ATM\n"
-        );
+                "12.)Exit ATM\n";
+
     }
 
-    public void withdrawMessage() {
-        System.out.println("Please enter an amount to withdraw: ");
-    }
-
-    public void depositMessage() {
-        System.out.println("Please enter the amount you'd like to deposit: ");
-    }
-
-    public void askForAmountToTransfer() {
-        System.out.println("Please enter the amount you'd like to Transfer: ");
-    }
-
-    public void promptUserToEnterName() {
-        System.out.println("Please enter your name");
-    }
-
-    public void promptUserToEnterPinCode() {
-        System.out.println("Please enter a 4-digit Pin Code for later use");
-    }
-
-    public void welcomeBackMessage() {
-        System.out.println("Welcome back! Enter your account ID to access your account");
-    }
-
-    public void checkingSavingsOrInvestmentPrompt() {
-        System.out.println("Would you like to open a 1.)Checking 2.)Savings or 3.)Investment Account? Enter the " +
+    public int accountTypeToOpen(){
+        return getIntPrompt("Would you like to open a 1.)Checking 2.)Savings or 3.)Investment Account? Enter the " +
                 "corresponding number value ");
-    }
-
-    public void whichAccountTypeWouldYouLikeToAccessMessage() {
-        System.out.println("Would account would you like to access.. 1.)Checking 2.)Savings or 3.)Investment Account? Enter the " +
-                "corresponding number value ");
-    }
-
-    public void whatIsYourBankAccountNumber() {
-        System.out.println("Please enter your bank account number: ");
-    }
-
-    public void whatIsYourPinCode() {
-        System.out.println("Enter your Pin Code");
-    }
-
-    public void enterBankAccountNumberMessage() {
-        System.out.println("Please enter desired bank Account Number: ");
-    }
-
-    public void askForTransferAccountType() {
-        System.out.println("Which account type would you like to send money to 1.) Checking\n2.)Savings\n3.)Investment");
-    }
-
-    public void askForTransferUserId() {
-        System.out.println("What is the user's Id you'd like to transfer to?");
-    }
-
-    public void askForAccountNumber() {
-        System.out.println("Enter account number to transfer to: ");
-    }
-
-    public void areYouSureYouWantToCloseThisAccount() {
-        System.out.println("Are you sure you want to close this account?\n1.) YES 2.)NO");
-    }
-
-    public String getStringFromUser() {
-        return input.next();
     }
 
     public static void accountIsFrozenNotification() {
@@ -314,5 +217,64 @@ public class Display {
                 "                                          |_______/  \\_______/|__/  |__/|__/  \\__/\n" +
                 "                                                                                  \n" +
                 "                                                                               ");
+    }
+
+    public int getIntPrompt(String promptMsg) {
+        int userInput = 0;
+        while (true) {
+            printMessage(promptMsg);
+            try {
+                userInput = input.nextInt();
+                break;
+            }catch(InputMismatchException e){
+                System.out.println("I need an integer please");
+            }catch(IndexOutOfBoundsException e){
+                System.out.println("Illegal Option");
+            }
+            if (input.hasNextLine()) {
+                input.nextLine();
+            }
+        }
+        return userInput;
+    }
+
+    public String getStringPrompt(String promptMsg) {
+        printMessage(promptMsg);
+        String userInput = "";
+        while (true) {
+            try {
+                userInput = input.next();
+                if (input.hasNextLine()) {
+                    input.nextLine();
+                }
+                return userInput;
+
+            } catch (IllegalArgumentException e) {
+                System.out.println("I need a string please");
+            }
+        }
+    }
+
+   public double getDoublePrompt(String promptMsg) {
+        printMessage(promptMsg);
+        double userInput = 0.0;
+        while (true) {
+            try {
+                userInput = input.nextDouble();
+                break;
+            } catch (InputMismatchException e) {
+                System.out.println("I need an double please");
+            }catch(IndexOutOfBoundsException e){
+                System.out.println("That isn't one of the options");
+            }
+            if (input.hasNextLine()) {
+                input.nextLine();
+            }
+        }
+        return userInput;
+    }
+
+    public void printMessage(String msg) {
+        System.out.print(msg);
     }
 }
