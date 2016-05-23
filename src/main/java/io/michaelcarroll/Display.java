@@ -170,7 +170,7 @@ public class Display {
 
     }
 
-    public int accountTypeToOpen(){
+    public int accountTypeToOpen() {
         return getIntPrompt("Would you like to open a 1.)Checking 2.)Savings or 3.)Investment Account? Enter the " +
                 "corresponding number value ");
     }
@@ -226,9 +226,9 @@ public class Display {
             try {
                 userInput = input.nextInt();
                 break;
-            }catch(InputMismatchException e){
+            } catch (InputMismatchException e) {
                 System.out.println("I need an integer please");
-            }catch(IndexOutOfBoundsException e){
+            } catch (IndexOutOfBoundsException e) {
                 System.out.println("Illegal Option");
             }
             if (input.hasNextLine()) {
@@ -255,7 +255,7 @@ public class Display {
         }
     }
 
-   public double getDoublePrompt(String promptMsg) {
+    public double getDoublePrompt(String promptMsg) {
         printMessage(promptMsg);
         double userInput = 0.0;
         while (true) {
@@ -264,7 +264,7 @@ public class Display {
                 break;
             } catch (InputMismatchException e) {
                 System.out.println("I need an double please");
-            }catch(IndexOutOfBoundsException e){
+            } catch (IndexOutOfBoundsException e) {
                 System.out.println("That isn't one of the options");
             }
             if (input.hasNextLine()) {
